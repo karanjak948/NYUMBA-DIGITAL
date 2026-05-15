@@ -1,45 +1,62 @@
+from django.contrib.auth import get_user_model
 
-from rest_framework import generics
-from .models import User
-from .serializers import RegisterSerializer
-from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = RegisterSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
+from .serializers import (
+    RegisterSerializer,
+    CustomTokenSerializer,
+)
+
+User = get_user_model()
+
+
+# =========================================
+# REGISTER VIEW
+# =========================================
 class RegisterView(APIView):
+
+    permission_classes = [AllowAny]
+
     def post(self, request):
-        user = User.objects.create_user(
-            username=request.data["email"],
-            email=request.data["email"],
-            password=request.data["password"],
-            role=request.data["role"]
-        )
-        return Response({"message": "User created"})
 
+        data = request.data.copy()
 
-class LoginView(APIView):
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
+        # Force role lowercase
+        if "role" in data:
+            data["role"] = data["role"].lower()
 
-        user = authenticate(username=username, password=password)
+        serializer = RegisterSerializer(data=data)
 
-        if user is None:
+        if serializer.is_valid():
+
+            user = serializer.save()
+
             return Response(
-                {"error": "Invalid credentials"},
-                status=status.HTTP_400_BAD_REQUEST
+                {
+                    "message": "User created successfully",
+                    "role": user.role,
+                },
+                status=status.HTTP_201_CREATED,
             )
 
-        token, _ = Token.objects.get_or_create(user=user)
+        return Response(
+            {
+                "error": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-        return Response({
-            "token": token.key,
-            "user_id": user.id,
-            "role": user.role
-        })
+
+# =========================================
+# LOGIN VIEW (JWT)
+# =========================================
+class CustomLoginView(TokenObtainPairView):
+
+    permission_classes = [AllowAny]
+
+    serializer_class = CustomTokenSerializer

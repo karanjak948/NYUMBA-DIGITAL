@@ -1,22 +1,32 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+
 import LandingPage from "./pages/LandingPage";
-import Properties from "./pages/Properties";
-import PropertyDetails from "./pages/PropertyDetails";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import PropertiesPage from "./pages/PropertiesPage";
+import PropertyDetailsPage from "./pages/PropertyDetailsPage";
+import LandlordDashboard from "./pages/LandlordDashboard";
+import TenantDashboard from "./pages/TenantDashboard";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import AddPropertyPage from "./pages/AddPropertyPage";
+import EditPropertyPage from "./pages/EditPropertyPage";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="*" element={<h2>Page Not Found</h2>} />
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/properties" element={<Properties />} />
-        <Route path="/property/:id" element={<PropertyDetails />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/properties" element={<PropertiesPage />} />
+      <Route path="/property/:id" element={<PropertyDetailsPage />} />
+
+      {/* Protected Routes */}
+      <Route path="/landlord/dashboard" element={ <ProtectedRoute> <LandlordDashboard /> </ProtectedRoute> } />
+      <Route path="/tenant/dashboard" element={ <ProtectedRoute> <TenantDashboard /> </ProtectedRoute> } />
+      <Route  path="/add-property" element={ <ProtectedRoute>  <AddPropertyPage />  </ProtectedRoute> } />
+      <Route  path="/edit-property/:id" element={ <ProtectedRoute>  <EditPropertyPage /> </ProtectedRoute> } />
+    </Routes>
   );
 }
 

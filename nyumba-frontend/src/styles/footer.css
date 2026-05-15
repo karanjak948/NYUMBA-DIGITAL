@@ -1,0 +1,41 @@
+.footer {
+  background: #0f172a;
+  color: white;
+
+  padding-top: 70px;
+}
+
+.footer-container {
+  width: 90%;
+  max-width: 1300px;
+  margin: auto;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+
+  gap: 40px;
+}
+
+.footer h2,
+.footer h3 {
+  margin-bottom: 20px;
+}
+
+.footer p,
+.footer li {
+  color: #cbd5e1;
+  margin-bottom: 10px;
+}
+
+.footer ul {
+  list-style: none;
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 60px;
+
+  padding: 20px;
+
+  border-top: 1px solid #1e293b;
+}

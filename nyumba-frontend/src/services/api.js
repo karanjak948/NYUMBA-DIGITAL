@@ -1,54 +1,233 @@
 import axios from "axios";
 
+
+// =========================================
+// API INSTANCE
+// =========================================
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+
+  baseURL: "http://127.0.0.1:8000/api/",
 });
 
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+
+// =========================================
+// REQUEST INTERCEPTOR
+// =========================================
+API.interceptors.request.use(
+
+  (req) => {
+
+    const token =
+      localStorage.getItem("access");
+
+    if (token) {
+
+      req.headers.Authorization =
+        `Bearer ${token}`;
+    }
+
+    return req;
   }
-  return config;
-});
+);
+
+
+// =========================================
+// RESPONSE INTERCEPTOR
+// AUTO REFRESH TOKEN
+// =========================================
+API.interceptors.response.use(
+
+  (response) => response,
+
+  async (error) => {
+
+    const originalRequest = error.config;
+
+    // TOKEN EXPIRED
+    if (
+
+      error.response?.status === 401 &&
+
+      !originalRequest._retry
+    ) {
+
+      originalRequest._retry = true;
+
+      try {
+
+        const refresh =
+          localStorage.getItem("refresh");
+
+        // REQUEST NEW TOKEN
+        const response = await axios.post(
+
+          "http://127.0.0.1:8000/api/auth/login/refresh/",
+
+          {
+            refresh,
+          }
+        );
+
+        const newAccess =
+          response.data.access;
+
+        // SAVE NEW TOKEN
+        localStorage.setItem(
+          "access",
+          newAccess
+        );
+
+        // UPDATE HEADER
+        originalRequest.headers.Authorization =
+          `Bearer ${newAccess}`;
+
+        // RETRY REQUEST
+        return API(originalRequest);
+
+      } catch (refreshError) {
+
+        console.error(refreshError);
+
+        // FORCE LOGOUT
+        localStorage.clear();
+
+        window.location.href = "/login";
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 
 export default API;
 
-// 🔥 FETCH ALL PROPERTIES
+
+// =========================================
+// GET PROPERTIES
+// =========================================
 export const getProperties = async () => {
-  const response = await API.get("properties/");
-  return response.data;
-};
 
-// 🔥 FETCH SINGLE PROPERTY
-export const getPropertyById = async (id) => {
-  const response = await API.get(`properties/${id}/`);
-  return response.data;
-};
+  const response =
+    await API.get("properties/");
 
-export const createBooking = async (propertyId) => {
-  const response = await API.post("bookings/", {
-    property: propertyId,
-  });
-  return response.data;
-};
-
-export const approveBooking = async (bookingId) => {
-  const res = await API.post("approve-booking/", {
-    booking: bookingId,
-  });
-  return res.data;
-};
-
-export const registerUser = async (data) => {
-  const response = await API.post("users/register/", data);
-  return response.data;
-};
-
-export const loginUser = async (data) => {
-  const response = await API.post("users/login/", data);
   return response.data;
 };
 
 
+// =========================================
+// GET SINGLE PROPERTY
+// =========================================
+export const getProperty = async (id) => {
 
+  const response =
+    await API.get(
+      `properties/${id}/`
+    );
+
+  return response.data;
+};
+
+
+// =========================================
+// CREATE BOOKING
+// =========================================
+export const createBooking = async (
+  bookingData
+) => {
+
+  const response = await API.post(
+
+    "bookings/",
+
+    bookingData
+  );
+
+  return response.data;
+};
+
+
+// =========================================
+// GET BOOKINGS
+// =========================================
+export const getBookings = async () => {
+
+  const response =
+    await API.get("bookings/");
+
+  return (
+    response.data.results ||
+    response.data
+  );
+};
+
+
+// =========================================
+// APPROVE BOOKING
+// =========================================
+export const approveBooking = async (
+  bookingId
+) => {
+
+  const response = await API.post(
+
+    "bookings/approve-booking/",
+
+    {
+      booking: bookingId,
+    }
+  );
+
+  return response.data;
+};
+
+
+// =========================================
+// CANCEL BOOKING
+// =========================================
+export const cancelBooking = async (
+  bookingId
+) => {
+
+  const response = await API.post(
+
+    "bookings/cancel-booking/",
+
+    {
+      booking: bookingId,
+    }
+  );
+
+  return response.data;
+};
+
+// DELETE PROPERTY
+export const deleteProperty = async (id) => {
+
+  const response = await API.delete(
+    `properties/${id}/`
+  );
+
+  return response.data;
+};
+
+// MARK VACANT
+export const markVacant = async (id) => {
+
+  const response = await API.post(
+    `properties/${id}/mark_vacant/`
+  );
+
+  return response.data;
+};
+
+
+// MARK OCCUPIED
+export const markOccupied = async (id) => {
+
+  const response = await API.post(
+    `properties/${id}/mark_occupied/`
+  );
+
+  return response.data;
+};

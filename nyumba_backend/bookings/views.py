@@ -5,48 +5,115 @@ from rest_framework.views import APIView
 
 from .models import Booking
 from .serializers import BookingSerializer
-
 from properties.models import Property
-from users.permissions import IsTenant
 
 
 # =========================================
 # 📌 BOOKING VIEWSET
 # =========================================
 class BookingViewSet(viewsets.ModelViewSet):
+
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
-    permission_classes = [IsAuthenticated, IsTenant]
+    permission_classes = [IsAuthenticated]
 
-    # 🔥 CREATE BOOKING
-    def create(self, request, *args, **kwargs):
-        property_id = request.data.get('property')
+    # =========================================
+    # 📌 FILTER BOOKINGS BY ROLE
+    # =========================================
+    def get_queryset(self):
 
-        # 🔍 Validate property
-        try:
-            property_obj = Property.objects.get(id=property_id)
-        except Property.DoesNotExist:
-            return Response(
-                {"error": "Property not found"},
-                status=status.HTTP_404_NOT_FOUND
+        user = self.request.user
+
+        if user.role == "admin":
+            return Booking.objects.all()
+
+        elif user.role == "tenant":
+            return Booking.objects.filter(
+                tenant=user
             )
 
-        # 🚫 Prevent double booking
-        if property_obj.status != 'available':
+        elif user.role == "landlord":
+            return Booking.objects.filter(
+                property__landlord=user
+            )
+
+        return Booking.objects.none()
+
+    # =========================================
+    # 📌 CREATE BOOKING
+    # =========================================
+    def create(self, request, *args, **kwargs):
+
+        # 🔥 ONLY TENANTS CAN BOOK
+        if request.user.role != "tenant":
+
             return Response(
-                {"error": "House is not available"},
+                {
+                    "error": "Only tenants can book"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # 🔥 CHECK IF TENANT ALREADY HAS A HOUSE
+        existing_booking = Booking.objects.filter(
+            tenant=request.user,
+            status__in=["pending", "approved"]
+        ).first()
+
+        if existing_booking:
+
+            return Response(
+                {
+                    "error": (
+                        f"You already have a "
+                        f"{existing_booking.property.property_type} booked."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # ✅ Create booking
+        # 🔥 GET PROPERTY ID
+        property_id = request.data.get("property")
+
+        # 🔥 CHECK PROPERTY EXISTS
+        try:
+
+            property_obj = Property.objects.get(
+                id=property_id
+            )
+
+        except Property.DoesNotExist:
+
+            return Response(
+                {
+                    "error": "Property not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # 🔥 PROPERTY MUST BE AVAILABLE
+        if property_obj.status != "available":
+
+            return Response(
+                {
+                    "error": "House is not available"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 🔥 CREATE BOOKING
         booking = Booking.objects.create(
             property=property_obj,
             tenant=request.user,
-            booking_fee=request.data.get('booking_fee'),
+            booking_fee=request.data.get(
+                "booking_fee",
+                0
+            ),
+            status="pending"
         )
 
-        # 🔄 Update property status
-        property_obj.status = 'booked'
+        # 🔥 UPDATE PROPERTY STATUS
+        property_obj.status = "booked"
         property_obj.save()
 
         return Response(
@@ -54,49 +121,135 @@ class BookingViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    # 🔍 FILTER BOOKINGS BY ROLE
-    def get_queryset(self):
-        user = self.request.user
-
-        if user.role == 'admin':
-            return Booking.objects.all()
-
-        elif user.role == 'tenant':
-            return Booking.objects.filter(tenant=user)
-
-        elif user.role == 'landlord':
-            return Booking.objects.filter(property__landlord=user)
-
-        return Booking.objects.none()
-
 
 # =========================================
-# 📌 APPROVE BOOKING (LANDLORD CONTROL)
+# 📌 APPROVE BOOKING
 # =========================================
 class ApproveBookingView(APIView):
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+
         booking_id = request.data.get("booking")
 
-        # 🔍 Get booking
+        # 🔥 FIND BOOKING
         try:
-            booking = Booking.objects.get(id=booking_id)
+
+            booking = Booking.objects.get(
+                id=booking_id
+            )
+
         except Booking.DoesNotExist:
+
             return Response(
-                {"error": "Booking not found"},
+                {
+                    "error": "Booking not found"
+                },
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # 🔐 Ensure only landlord can approve
-        if booking.property.landlord != request.user:
+        # 🔥 ONLY LANDLORDS
+        if request.user.role != "landlord":
+
             return Response(
-                {"error": "Not allowed"},
+                {
+                    "error": "Only landlords can approve"
+                },
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # ✅ Approve booking
+        # 🔥 OWNERSHIP CHECK
+        if booking.property.landlord.id != request.user.id:
+
+            return Response(
+                {
+                    "error": "You do not own this property"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # 🔥 ALREADY APPROVED
+        if booking.status == "approved":
+
+            return Response(
+                {
+                    "error": "Already approved"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 🔥 APPROVE BOOKING
         booking.status = "approved"
         booking.save()
 
-        return Response({"message": "Booking approved"})
+        return Response(
+            {
+                "message": "Booking approved",
+                "status": booking.status
+            }
+        )
+
+
+# =========================================
+# 📌 CANCEL BOOKING
+# =========================================
+class CancelBookingView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        booking_id = request.data.get("booking")
+
+        # 🔥 FIND BOOKING
+        try:
+
+            booking = Booking.objects.get(
+                id=booking_id
+            )
+
+        except Booking.DoesNotExist:
+
+            return Response(
+                {
+                    "error": "Booking not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # 🔥 ONLY LANDLORDS
+        if request.user.role != "landlord":
+
+            return Response(
+                {
+                    "error": "Only landlords can cancel"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # 🔥 OWNERSHIP CHECK
+        if booking.property.landlord.id != request.user.id:
+
+            return Response(
+                {
+                    "error": "You do not own this property"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # 🔥 CANCEL BOOKING
+        booking.status = "cancelled"
+        booking.save()
+
+        # 🔥 MAKE PROPERTY AVAILABLE AGAIN
+        property_obj = booking.property
+        property_obj.status = "available"
+        property_obj.save()
+
+        return Response(
+            {
+                "message": "Booking cancelled",
+                "property_status": property_obj.status
+            }
+        )

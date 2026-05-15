@@ -1,147 +1,330 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
 from django.db.models import Sum
+
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAdminUser,
+)
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Property
 from .serializers import PropertySerializer
 
 from users.permissions import IsLandlord
+
 from bookings.models import Booking
 
 
 class PropertyViewSet(viewsets.ModelViewSet):
+
     serializer_class = PropertySerializer
+
     permission_classes = [IsAuthenticated]
 
-    # 🔥 SMART FILTERING + ROLE CONTROL
+    # Base queryset required by router
+    queryset = Property.objects.all()
+
+    # =========================================
+    # MARK PROPERTY VACANT
+    # =========================================
+    @action(detail=True, methods=["post"])
+    def mark_vacant(self, request, pk=None):
+
+        property = self.get_object()
+
+        property.status = "available"
+
+        property.save()
+
+        return Response({
+            "message":
+            "Property marked as vacant"
+        })
+
+    # =========================================
+    # MARK PROPERTY OCCUPIED
+    # =========================================
+    @action(detail=True, methods=["post"])
+    def mark_occupied(self, request, pk=None):
+
+        property = self.get_object()
+
+        property.status = "occupied"
+
+        property.save()
+
+        return Response({
+            "message":
+            "Property marked as occupied"
+        })
+
+    # =========================================
+    # FILTERING + ROLE CONTROL
+    # =========================================
     def get_queryset(self):
+
         user = self.request.user
-        queryset = Property.objects.all()
 
-        # 📍 Location filtering (Geo)
-        lat = self.request.query_params.get('lat')
-        lng = self.request.query_params.get('lng')
-        radius = self.request.query_params.get('radius')
+        queryset = super().get_queryset()
 
-        if lat and lng and radius:
+        # -------------------------------------
+        # GEO FILTERING
+        # -------------------------------------
+        lat = self.request.query_params.get(
+            "lat"
+        )
+
+        lng = self.request.query_params.get(
+            "lng"
+        )
+
+        if lat and lng:
+
             lat = float(lat)
+
             lng = float(lng)
 
             queryset = queryset.filter(
                 latitude__gte=lat - 0.1,
                 latitude__lte=lat + 0.1,
                 longitude__gte=lng - 0.1,
-                longitude__lte=lng + 0.1
+                longitude__lte=lng + 0.1,
             )
 
-        # 🔐 Role-based filtering (SAFE VERSION)
+        # -------------------------------------
+        # ROLE FILTERING
+        # -------------------------------------
         if user.is_authenticated:
-            if user.role == 'admin':
-                pass  # full access
 
-            elif user.role == 'landlord':
-                queryset = queryset.filter(landlord=user)
+            if user.role == "landlord":
 
-            elif user.role == 'tenant':
-                queryset = queryset.filter(status='available')
+                queryset = queryset.filter(
+                    landlord=user
+                )
+
+            elif user.role == "tenant":
+
+                queryset = queryset.filter(
+                    status="available"
+                )
+
         else:
-            # 🔥 Anonymous users → only see available
-            queryset = queryset.filter(status='available')
 
-        # 🔍 Filters
-        min_price = self.request.query_params.get('min_price')
-        max_price = self.request.query_params.get('max_price')
-        location = self.request.query_params.get('location')
-        search = self.request.query_params.get('search')
+            queryset = queryset.filter(
+                status="available"
+            )
+
+        # -------------------------------------
+        # SEARCH + FILTERS
+        # -------------------------------------
+        min_price = (
+            self.request.query_params.get(
+                "min_price"
+            )
+        )
+
+        max_price = (
+            self.request.query_params.get(
+                "max_price"
+            )
+        )
+
+        location = (
+            self.request.query_params.get(
+                "location"
+            )
+        )
+
+        search = (
+            self.request.query_params.get(
+                "search"
+            )
+        )
 
         if min_price:
-            queryset = queryset.filter(price__gte=min_price)
+
+            queryset = queryset.filter(
+                price__gte=min_price
+            )
 
         if max_price:
-            queryset = queryset.filter(price__lte=max_price)
+
+            queryset = queryset.filter(
+                price__lte=max_price
+            )
 
         if location:
-            queryset = queryset.filter(location__icontains=location)
+
+            queryset = queryset.filter(
+                location__icontains=location
+            )
 
         if search:
-            queryset = queryset.filter(title__icontains=search)
 
-        # 🔽 Sorting
-        ordering = self.request.query_params.get('ordering')
+            queryset = queryset.filter(
+                title__icontains=search
+            )
 
-        if ordering == 'price_low':
-            queryset = queryset.order_by('price')
+        # -------------------------------------
+        # SORTING
+        # -------------------------------------
+        ordering = (
+            self.request.query_params.get(
+                "ordering"
+            )
+        )
 
-        elif ordering == 'price_high':
-            queryset = queryset.order_by('-price')
+        if ordering == "price_low":
+
+            queryset = queryset.order_by(
+                "price"
+            )
+
+        elif ordering == "price_high":
+
+            queryset = queryset.order_by(
+                "-price"
+            )
 
         return queryset
 
-    # 🔥 AUTO ASSIGN LANDLORD
+    # =========================================
+    # AUTO ASSIGN LANDLORD
+    # =========================================
     def perform_create(self, serializer):
-        serializer.save(landlord=self.request.user)
 
-    # 🔥 ROLE-BASED PERMISSIONS (FIXED CLEAN VERSION)
+        serializer.save(
+            landlord=self.request.user
+        )
+
+    # =========================================
+    # PERMISSIONS
+    # =========================================
     def get_permissions(self):
+
         user = self.request.user
 
-        # 🔓 Public access for listing
-        if self.action in ['list', 'retrieve']:
+        # Public endpoints
+        if self.action in [
+            "list",
+            "retrieve",
+        ]:
             return []
 
-        # 🔐 Not logged in → block other actions
+        # Require auth
         if not user.is_authenticated:
             return [IsAuthenticated()]
 
-        # 👑 Admin override
-        if hasattr(user, 'role') and user.role == 'admin':
+        # Admin permissions
+        if (
+            hasattr(user, "role")
+            and user.role == "admin"
+        ):
             return [IsAdminUser()]
 
-        # 🏠 Landlord can create
-        if self.action == 'create':
-            return [IsAuthenticated(), IsLandlord()]
+        # Landlord create
+        if self.action == "create":
+            return [
+                IsAuthenticated(),
+                IsLandlord(),
+            ]
 
         return [IsAuthenticated()]
 
 
-# 📊 REPORT VIEW
+# =========================================
+# REPORT VIEW
+# =========================================
 class ReportView(APIView):
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+
         user = request.user
 
-        # 🏠 Landlord → only their properties
-        if user.role == 'landlord':
-            properties = Property.objects.filter(landlord=user)
-            bookings = Booking.objects.filter(property__landlord=user)
+        # -------------------------------------
+        # LANDLORD REPORT
+        # -------------------------------------
+        if user.role == "landlord":
 
-        # 🧑 Admin or others → all data
+            properties = (
+                Property.objects.filter(
+                    landlord=user
+                )
+            )
+
+            bookings = (
+                Booking.objects.filter(
+                    property__landlord=user
+                )
+            )
+
+        # -------------------------------------
+        # ADMIN REPORT
+        # -------------------------------------
         else:
-            properties = Property.objects.all()
-            bookings = Booking.objects.all()
 
-        total_properties = properties.count()
-        available = properties.filter(status='available').count()
-        booked = properties.filter(status='booked').count()
+            properties = (
+                Property.objects.all()
+            )
 
-        # 💰 Total income
-        total_income = bookings.aggregate(total=Sum('booking_fee'))['total'] or 0
+            bookings = (
+                Booking.objects.all()
+            )
 
-        # 📊 Occupancy rate
+        # -------------------------------------
+        # CALCULATIONS
+        # -------------------------------------
+        total_properties = (
+            properties.count()
+        )
+
+        available = (
+            properties.filter(
+                status="available"
+            ).count()
+        )
+
+        booked = (
+            properties.filter(
+                status="booked"
+            ).count()
+        )
+
+        total_income = (
+            bookings.aggregate(
+                total=Sum("booking_fee")
+            )["total"]
+            or 0
+        )
+
         occupancy_rate = 0
+
         if total_properties > 0:
-            occupancy_rate = (booked / total_properties) * 100
 
-        data = {
-            "total_properties": total_properties,
-            "available_properties": available,
-            "booked_properties": booked,
-            "occupancy_rate": round(occupancy_rate, 2),
-            "total_income": total_income
-        }
+            occupancy_rate = (
+                booked / total_properties
+            ) * 100
 
-        return Response(data)
+        # -------------------------------------
+        # RESPONSE
+        # -------------------------------------
+        return Response({
+            "total_properties":
+                total_properties,
+
+            "available_properties":
+                available,
+
+            "booked_properties":
+                booked,
+
+            "occupancy_rate":
+                round(occupancy_rate, 2),
+
+            "total_income":
+                total_income,
+        })

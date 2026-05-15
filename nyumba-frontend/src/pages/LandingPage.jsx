@@ -1,75 +1,153 @@
-import Navbar from "../components/Navbar";
-import { useNavigate } from "react-router-dom";
+import Navbar from "../components/layout/Navbar";
+import Footer from "../components/layout/Footer";
+
+import { Link } from "react-router-dom";
+
+import {
+  MapPin,
+  ShieldCheck,
+  Search,
+  Building2,
+} from "lucide-react";
+
+import "../styles/landing.css";
 
 function LandingPage() {
-  const navigate = useNavigate();
-
   return (
-    <>
+    <div>
+
       <Navbar />
 
-      <div className="hero">
+      {/* HERO */}
+      <section className="hero">
 
-        {/* HERO TEXT */}
-        <div className="container text-center">
-          <h1 className="hero-title">
-            Find Your Perfect Home in{" "}
-            <span className="hero-highlight">Nairobi</span>
+        <div className="hero-content">
+
+          <h1>
+            Find Your Perfect Home in Nairobi
           </h1>
 
-          <p className="hero-sub mt-3">
-            A geo-based rental management system connecting landlords and tenants
-            directly. No agents. No viewing fees. Real-time vacancy updates.
+          <p>
+            A smart rental platform connecting landlords and tenants directly.
+            No agents. No viewing fees. Real-time vacancy updates.
           </p>
 
-          {/* ACTION BUTTONS */}
-          <div className="mt-4 d-flex justify-content-center gap-3 flex-wrap">
-            <button
-              className="btn btn-green"
-              onClick={() => navigate("/properties")}
-            >
-              🔍 Search Properties
-            </button>
+          {/* HERO BUTTONS */}
+          <div className="hero-buttons">
 
-            <button
-              className="btn btn-outline-custom"
-              onClick={() => navigate("/register")}
-            >
-              List Your Property
-            </button>
-          </div>
-        </div>
+            <Link to="/properties">
+              <button className="primary-btn">
+                Search Properties
+              </button>
+            </Link>
 
-        {/* STATS SECTION */}
-        <div className="container mt-5">
-          <div className="row g-4 text-center">
-
-            <div className="col-md-4">
-              <div className="stat-card">
-                <h2>🏠 500+</h2>
-                <p>Properties Listed</p>
-              </div>
-            </div>
-
-            <div className="col-md-4">
-              <div className="stat-card">
-                <h2>👥 1,200+</h2>
-                <p>Active Users</p>
-              </div>
-            </div>
-
-            <div className="col-md-4">
-              <div className="stat-card">
-                <h2>📈 95%</h2>
-                <p>Success Rate</p>
-              </div>
-            </div>
+            <Link to="/register">
+              <button className="secondary-btn">
+                List Your Property
+              </button>
+            </Link>
 
           </div>
+
         </div>
 
-      </div>
-    </>
+      </section>
+
+      {/* FEATURES */}
+      <section className="features" id="features">
+
+        <div className="section-title">
+          <h2>Why Choose Nyumba Digital?</h2>
+
+          <p>
+            Smart features built for both landlords and tenants
+          </p>
+        </div>
+
+        <div className="features-grid">
+
+          <div className="feature-card">
+            <MapPin size={40} />
+
+            <h3>Location Based Search</h3>
+
+            <p>
+              Find houses near your preferred location easily.
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <ShieldCheck size={40} />
+
+            <h3>No Agents</h3>
+
+            <p>
+              Connect directly with landlords without extra fees.
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <Search size={40} />
+
+            <h3>Advanced Filtering</h3>
+
+            <p>
+              Filter by rent, bedrooms, amenities and more.
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <Building2 size={40} />
+
+            <h3>Property Management</h3>
+
+            <p>
+              Landlords can manage vacancies in real-time.
+            </p>
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* ABOUT */}
+      <section className="about-section" id="about">
+
+        <div className="about-content">
+
+          <div className="about-text">
+
+            <h2>About Nyumba Digital</h2>
+
+            <p>
+              Nyumba Digital is a modern housing platform
+              designed to simplify rental management in Kenya.
+            </p>
+
+            <p>
+              We help landlords advertise vacant houses
+              while enabling tenants to search and book
+              properties quickly and efficiently.
+            </p>
+
+          </div>
+
+          <div className="about-image">
+
+            <img
+              src="https://images.unsplash.com/photo-1460317442991-0ec209397118?q=80&w=1200&auto=format&fit=crop"
+              alt="House"
+            />
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <Footer />
+
+    </div>
   );
 }
 
