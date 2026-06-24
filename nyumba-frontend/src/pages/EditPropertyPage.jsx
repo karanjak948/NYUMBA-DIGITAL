@@ -7,7 +7,7 @@ import {
 
 import Navbar from "../components/layout/Navbar";
 
-import api, {
+import API, {
   getProperty,
 } from "../services/api";
 
@@ -28,7 +28,9 @@ function EditPropertyPage() {
     status: "",
   });
 
-  const [image, setImage] = useState(null);
+  // 🔥 KEEP NULL
+  const [image, setImage] =
+    useState(null);
 
   useEffect(() => {
 
@@ -36,11 +38,15 @@ function EditPropertyPage() {
 
   }, []);
 
+  // =========================================
+  // FETCH PROPERTY
+  // =========================================
   const fetchProperty = async () => {
 
     try {
 
-      const data = await getProperty(id);
+      const data =
+        await getProperty(id);
 
       setFormData(data);
 
@@ -50,35 +56,61 @@ function EditPropertyPage() {
     }
   };
 
+  // =========================================
+  // HANDLE INPUT CHANGE
+  // =========================================
   const handleChange = (e) => {
 
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]:
+        e.target.value,
     });
   };
 
+  // =========================================
+  // HANDLE IMAGE
+  // =========================================
   const handleImage = (e) => {
-    setImage(e.target.files[0]);
+
+    setImage(
+      e.target.files[0]
+    );
   };
 
+  // =========================================
+  // HANDLE SUBMIT
+  // =========================================
   const handleSubmit = async (e) => {
 
     e.preventDefault();
 
     try {
 
-      const data = new FormData();
+      const data =
+        new FormData();
 
-      Object.keys(formData).forEach((key) => {
-        data.append(key, formData[key]);
-      });
+      Object.keys(formData).forEach(
+        (key) => {
 
-      if (image) {
-        data.append("image", image);
+          data.append(
+            key,
+            formData[key]
+          );
+        }
+      );
+
+      // 🔥 ONLY APPEND IF REAL FILE
+      if (image instanceof File) {
+
+        data.append(
+          "image",
+          image
+        );
       }
 
-      await api.put(
+      // 🔥 PATCH REQUEST
+      await API.patch(
         `properties/${id}/`,
         data,
         {
@@ -89,15 +121,25 @@ function EditPropertyPage() {
         }
       );
 
-      alert("Property updated");
+      alert(
+        "Property updated successfully"
+      );
 
-      navigate("/landlord/dashboard");
+      navigate(
+        "/landlord/dashboard"
+      );
 
     } catch (error) {
 
-      console.error(error);
+      console.log(
+        error.response?.data
+      );
 
-      alert("Update failed");
+      alert(
+        JSON.stringify(
+          error.response?.data
+        )
+      );
     }
   };
 
@@ -113,7 +155,9 @@ function EditPropertyPage() {
           onSubmit={handleSubmit}
         >
 
-          <h2>Edit Property</h2>
+          <h2>
+            Edit Property
+          </h2>
 
           <input
             type="text"
@@ -124,7 +168,9 @@ function EditPropertyPage() {
 
           <textarea
             name="description"
-            value={formData.description}
+            value={
+              formData.description
+            }
             onChange={handleChange}
           />
 
@@ -138,13 +184,17 @@ function EditPropertyPage() {
           <input
             type="text"
             name="location"
-            value={formData.location}
+            value={
+              formData.location
+            }
             onChange={handleChange}
           />
 
           <select
             name="property_type"
-            value={formData.property_type}
+            value={
+              formData.property_type
+            }
             onChange={handleChange}
           >
 

@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   Search,
   Building2,
+  Users,
+  Home,
 } from "lucide-react";
 
 import "../styles/landing.css";
@@ -111,39 +113,115 @@ function LandingPage() {
       </section>
 
       {/* ABOUT */}
-      <section className="about-section" id="about">
+{/* ABOUT */}
+        <section className="about-section" id="about">
 
-        <div className="about-content">
+          {/* Top Row */}
+          <div className="about-content">
 
-          <div className="about-text">
+            <div className="about-text">
 
-            <h2>About Nyumba Digital</h2>
+              <h2>About Nyumba Digital</h2>
 
-            <p>
-              Nyumba Digital is a modern housing platform
-              designed to simplify rental management in Kenya.
-            </p>
+              <p>
+                Nyumba Digital is a modern property management and
+                rental marketplace built to transform the way
+                landlords and tenants connect across Kenya.
+              </p>
 
-            <p>
-              We help landlords advertise vacant houses
-              while enabling tenants to search and book
-              properties quickly and efficiently.
-            </p>
+              <p>
+                Our platform eliminates the challenges associated
+                with traditional house hunting by providing
+                real-time vacancy information, location-based
+                property discovery, direct communication between
+                landlords and tenants, and secure booking
+                workflows.
+              </p>
+
+              <p>
+                Whether you are a tenant searching for your next
+                home or a landlord looking to manage multiple
+                properties efficiently, Nyumba Digital provides
+                the tools needed to simplify the entire rental
+                experience.
+              </p>
+
+              <p>
+                Through smart property management, vacancy
+                tracking, geospatial search, and digital booking
+                capabilities, we are creating a more transparent,
+                efficient, and accessible housing ecosystem for
+                everyone.
+              </p>
+
+            </div>
+
+            <div className="about-image">
+
+              <img
+                src="https://images.unsplash.com/photo-1460317442991-0ec209397118?q=80&w=1200&auto=format&fit=crop"
+                alt="Nyumba Digital Apartments"
+              />
+
+            </div>
 
           </div>
 
-          <div className="about-image">
+          {/* Statistics */}
+          <div className="about-stats">
 
-            <img
-              src="https://images.unsplash.com/photo-1460317442991-0ec209397118?q=80&w=1200&auto=format&fit=crop"
-              alt="House"
-            />
+            <div className="stat-card">
+              <Building2 size={40} />
+              <h3>500+</h3>
+              <p>Properties Listed</p>
+            </div>
+
+            <div className="stat-card">
+              <Users size={40} />
+              <h3>1000+</h3>
+              <p>Happy Tenants</p>
+            </div>
+
+            <div className="stat-card">
+              <Home size={40} />
+              <h3>100+</h3>
+              <p>Landlords</p>
+            </div>
 
           </div>
 
-        </div>
+          {/* Mission Vision */}
+          <div className="mission-vision">
 
-      </section>
+            <div className="mission-card">
+
+              <h3>Our Mission</h3>
+
+              <p>
+                To simplify property rental and management
+                through technology while creating direct,
+                transparent relationships between landlords
+                and tenants.
+              </p>
+
+            </div>
+
+            <div className="mission-card">
+
+              <h3>Our Vision</h3>
+
+              <p>
+                To become Kenya's leading smart housing
+                platform by providing innovative tools that
+                improve accessibility, affordability, and
+                efficiency in the rental market.
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
 
       <Footer />
 

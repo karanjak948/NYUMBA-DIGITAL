@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     RegisterView,
     CustomLoginView,
+    ProfileView,
 )
 
 from rest_framework_simplejwt.views import (
@@ -26,5 +27,11 @@ urlpatterns = [
         "login/refresh/",
         TokenRefreshView.as_view(),
         name="token_refresh",
+    ),
+
+    path(
+        "profile/",
+        ProfileView.as_view(),
+        name="profile",
     ),
 ]

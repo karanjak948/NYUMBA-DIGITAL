@@ -7,23 +7,40 @@ import {
 
 import Navbar from "../components/layout/Navbar";
 
+import AnalyticsCards from "../components/dashboard/AnalyticsCards";
+
 import {
   getBookings,
   approveBooking,
   deleteProperty,
   markVacant,
   markOccupied,
+  getLandlordAnalytics,
+  getProfile,
 } from "../services/api";
 
 import "../styles/dashboard.css";
 
 function LandlordDashboard() {
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] =
+    useState([]);
+
+  const [analytics, setAnalytics] =
+    useState(null);
+
+  const [user, setUser] =
+    useState(null);
+
 
   const navigate = useNavigate();
 
+  // =========================================
+  // INITIAL LOAD
+  // =========================================
   useEffect(() => {
     fetchBookings();
+    fetchAnalytics();
+    fetchProfile();
   }, []);
 
   // =========================================
@@ -31,12 +48,44 @@ function LandlordDashboard() {
   // =========================================
   const fetchBookings = async () => {
     try {
-      const data = await getBookings();
+      const data =
+        await getBookings();
 
       setBookings(data);
     } catch (error) {
       console.error(error);
     }
+  };
+
+  // =========================================
+  // FETCH ANALYTICS
+  // =========================================
+  const fetchAnalytics = async () => {
+    try {
+      const data =
+        await getLandlordAnalytics();
+
+      setAnalytics(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchProfile = async () => {
+
+    try {
+
+      const data =
+        await getProfile();
+
+      setUser(data);
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
   };
 
   // =========================================
@@ -49,12 +98,13 @@ function LandlordDashboard() {
       alert("Booking approved");
 
       fetchBookings();
+      fetchAnalytics();
     } catch (error) {
       console.error(error);
 
       alert(
         error.response?.data?.error ||
-          "Approval failed"
+        "Approval failed"
       );
     }
   };
@@ -63,9 +113,10 @@ function LandlordDashboard() {
   // DELETE PROPERTY
   // =========================================
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Delete this property?"
-    );
+    const confirmDelete =
+      window.confirm(
+        "Delete this property?"
+      );
 
     if (!confirmDelete) return;
 
@@ -75,6 +126,7 @@ function LandlordDashboard() {
       alert("Property deleted");
 
       fetchBookings();
+      fetchAnalytics();
     } catch (error) {
       console.error(error);
 
@@ -92,6 +144,7 @@ function LandlordDashboard() {
       alert("Property marked vacant");
 
       fetchBookings();
+      fetchAnalytics();
     } catch (error) {
       console.error(error);
     }
@@ -107,6 +160,7 @@ function LandlordDashboard() {
       alert("Property marked occupied");
 
       fetchBookings();
+      fetchAnalytics();
     } catch (error) {
       console.error(error);
     }
@@ -117,9 +171,21 @@ function LandlordDashboard() {
       <Navbar />
 
       <section className="dashboard">
-        {/* HEADER */}
+        {/* WELCOME HEADER */}
         <div className="dashboard-header">
-          <h1>Booking Requests</h1>
+          <h1>
+            Welcome,
+              {" "}
+              {user?.username || "Landlord"}
+              👋
+          </h1>
+
+          <p>
+            Track property availability, manage
+            tenant requests, and monitor your
+            rental portfolio performance in
+            real time.
+          </p><br></br>
 
           <div className="dashboard-actions">
             <Link
@@ -129,6 +195,67 @@ function LandlordDashboard() {
               + Add Property
             </Link>
           </div>
+        </div>
+
+        {/* SUMMARY BANNER */}
+        <div className="dashboard-summary">
+          <p>
+            You currently manage
+            {" "}
+            <strong>
+              {
+                analytics?.total_properties || 0
+              }
+            </strong>
+            {" "}
+            properties with
+            {" "}
+            <strong>
+              {
+                analytics?.pending_bookings || 0
+              }
+            </strong>
+            {" "}
+            pending booking requests.
+          </p>
+        </div>
+
+        {/* ANALYTICS */}
+        <div className="analytics-grid">
+          <AnalyticsCards
+            title="Properties"
+            value={
+              analytics?.total_properties || 0
+            }
+          />
+
+          <AnalyticsCards
+            title="Vacant Houses"
+            value={
+              analytics?.available_properties || 0
+            }
+          />
+
+          <AnalyticsCards
+            title="Occupied Houses"
+            value={
+              analytics?.occupied_properties || 0
+            }
+          />
+
+          <AnalyticsCards
+            title="Pending Requests"
+            value={
+              analytics?.pending_bookings || 0
+            }
+          />
+
+          <AnalyticsCards
+            title="Approved Tenants"
+            value={
+              analytics?.approved_bookings || 0
+            }
+          />
         </div>
 
         {/* BOOKINGS GRID */}
@@ -147,8 +274,9 @@ function LandlordDashboard() {
                     </h3>
 
                     <p className="property-meta">
-                      {booking.location} •
-                      {" "}KES {booking.price}
+                      {booking.location}
+                      {" • "}
+                      KES {booking.price}
                     </p>
                   </div>
 
@@ -162,17 +290,14 @@ function LandlordDashboard() {
                 {/* TENANT INFO */}
                 <div className="tenant-info">
                   <p>
-                    Tenant:
-                    {" "}
+                    Tenant:{" "}
                     <strong>
-                      {
-                        booking.tenant_username
-                      }
+                      {booking.tenant_username}
                     </strong>
                   </p>
                 </div>
 
-                {/* ACTION BUTTONS */}
+                {/* ACTIONS */}
                 <div className="dashboard-actions">
                   <button
                     className="edit-btn"

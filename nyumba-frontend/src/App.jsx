@@ -10,6 +10,9 @@ import TenantDashboard from "./pages/TenantDashboard";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import AddPropertyPage from "./pages/AddPropertyPage";
 import EditPropertyPage from "./pages/EditPropertyPage";
+import ProfilePage from "./pages/ProfilePage";
+import LandlordReports from "./pages/LandlordReports";
+import LandlordInquiries from "./pages/LandlordInquiries";
 
 function App() {
   return (
@@ -20,6 +23,10 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/properties" element={<PropertiesPage />} />
       <Route path="/property/:id" element={<PropertyDetailsPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/reports" element={ <LandlordReports /> } />
+      <Route path="/landlord/inquiries" element={ <LandlordInquiries /> } />
+      
 
       {/* Protected Routes */}
       <Route path="/landlord/dashboard" element={ <ProtectedRoute> <LandlordDashboard /> </ProtectedRoute> } />

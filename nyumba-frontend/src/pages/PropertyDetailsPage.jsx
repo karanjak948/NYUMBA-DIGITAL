@@ -4,17 +4,17 @@ import { useParams } from "react-router-dom";
 
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
+import { createInquiry } from "../services/api";
 
-import {
-  getProperty,
-  createBooking,
-} from "../services/api";
+import { getProperty, createBooking, } from "../services/api";
 
 import "../styles/property.css";
 
 function PropertyDetailsPage() {
 
   const { id } = useParams();
+
+  const [message, setMessage] = useState("");
 
   const [property, setProperty] = useState(null);
 
@@ -66,6 +66,33 @@ function PropertyDetailsPage() {
         "Booking failed"
       );
     }
+  };
+
+  // Handle Inquiry
+  const handleInquiry =
+    async () => {
+
+      try {
+
+        await createInquiry({
+          property: property.id,
+          message,
+        });
+
+        alert(
+          "Inquiry sent successfully"
+        );
+
+        setMessage("");
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Failed to send inquiry"
+        );
+      }
   };
 
   // =========================================
@@ -141,27 +168,54 @@ function PropertyDetailsPage() {
           {/* ========================================= */}
           {/* BOOKING BUTTON */}
           {/* ========================================= */}
-          {property.status === "available" ? (
 
-            <button
-              className="book-btn"
-              onClick={handleBooking}
-            >
-              Book Property
-            </button>
+          <div className="property-actions">
 
-          ) : (
+            {property.status === "available" ? (
 
-            <button
-              className="book-btn disabled-btn"
-            >
-              Not Available
-            </button>
+              <button
+                className="book-btn"
+                onClick={handleBooking}
+              >
+                Book Property
+              </button>
 
-          )}
+            ) : (
 
+              <button
+                className="book-btn disabled-btn"
+              >
+                Not Available
+              </button>
+
+            )}
+
+            <div className="inquiry-box">
+
+              <h3>
+                Contact Landlord
+              </h3>
+
+              <textarea
+                value={message}
+                onChange={(e) =>
+                  setMessage(
+                    e.target.value
+                  )
+                }
+                placeholder="Ask the landlord a question..."
+              />
+
+              <button
+                onClick={handleInquiry}
+              >
+                Send Inquiry
+              </button>
+
+            </div>
+
+          </div>
         </div>
-
         {/* ========================================= */}
         {/* GOOGLE MAP */}
         {/* ========================================= */}

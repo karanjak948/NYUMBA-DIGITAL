@@ -61,3 +61,24 @@ class CustomTokenSerializer(TokenObtainPairSerializer):
         data['role'] = self.user.role
 
         return data
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+
+        fields = [
+            "id",
+            "username",
+            "email",
+            "phone",
+            "role",
+            "date_joined",
+        ]
+
+        read_only_fields = [
+            "id",
+            "username",
+            "role",
+            "date_joined",
+        ]

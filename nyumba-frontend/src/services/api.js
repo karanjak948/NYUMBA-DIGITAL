@@ -231,3 +231,135 @@ export const markOccupied = async (id) => {
 
   return response.data;
 };
+
+// LANDLORD ANALYTICS
+export const getLandlordAnalytics =
+  async () => {
+
+    const response = await API.get(
+      "analytics/landlord/"
+    );
+
+    return response.data;
+};
+
+
+// TENANT ANALYTICS
+export const getTenantAnalytics =
+  async () => {
+
+    const response = await API.get(
+      "analytics/tenant/"
+    );
+
+    return response.data;
+};
+
+// Get report data
+export const getReport = async () => {
+
+  const response =
+    await API.get(
+      "reports/"
+    );
+
+  return response.data;
+};
+
+// GET PROFILE
+export const getProfile =
+  async () => {
+
+    const response =
+      await API.get(
+        "auth/profile/"
+      );
+
+    return response.data;
+};
+
+// UPDATE PROFILE
+export const updateProfile =
+  async (profileData) => {
+
+    const response =
+      await API.patch(
+        "auth/profile/",
+        profileData
+      );
+
+    return response.data;
+};
+
+// =========================================
+// NOTIFICATIONS
+// =========================================
+export const getNotifications = async () => {
+
+  const response = await API.get(
+    "notifications/"
+  );
+
+  console.log(
+    "Notifications API:",
+    response.data
+  );
+
+  return response.data;
+};
+
+export const markNotificationsRead =
+  async () => {
+
+    const response =
+      await API.post(
+        "notifications/mark-read/"
+      );
+
+    return response.data;
+  };
+
+
+// =========================================
+// INQUIRIES
+// =========================================
+
+export const getInquiries = async () => {
+
+  const response = await API.get(
+    "inquiries/"
+  );
+
+  return (
+    response.data.results ||
+    response.data
+  );
+};
+
+export const createInquiry = async (
+  inquiryData
+) => {
+
+  const response = await API.post(
+    "inquiries/",
+    inquiryData
+  );
+
+  return response.data;
+};
+
+export const replyInquiry = async (
+  inquiry,
+  reply
+) => {
+
+  const response = await API.post(
+    "inquiries/reply/",
+    {
+      inquiry,
+      reply,
+    }
+  );
+
+  return response.data;
+};

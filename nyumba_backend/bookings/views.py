@@ -3,6 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from notifications.models import Notification
+
 from .models import Booking
 from .serializers import BookingSerializer
 from properties.models import Property
@@ -112,6 +114,15 @@ class BookingViewSet(viewsets.ModelViewSet):
             status="pending"
         )
 
+        # 🔔 NOTIFY LANDLORD
+        Notification.objects.create(
+            user=property_obj.landlord,
+            message=(
+                f"{request.user.username} "
+                f"booked {property_obj.title}"
+            )
+        )
+
         # 🔥 UPDATE PROPERTY STATUS
         property_obj.status = "booked"
         property_obj.save()
@@ -133,7 +144,6 @@ class ApproveBookingView(APIView):
 
         booking_id = request.data.get("booking")
 
-        # 🔥 FIND BOOKING
         try:
 
             booking = Booking.objects.get(
@@ -183,6 +193,16 @@ class ApproveBookingView(APIView):
         booking.status = "approved"
         booking.save()
 
+        # 🔔 NOTIFY TENANT
+        Notification.objects.create(
+            user=booking.tenant,
+            message=(
+                f"Your booking for "
+                f"{booking.property.title} "
+                f"has been approved."
+            )
+        )
+
         return Response(
             {
                 "message": "Booking approved",
@@ -202,7 +222,6 @@ class CancelBookingView(APIView):
 
         booking_id = request.data.get("booking")
 
-        # 🔥 FIND BOOKING
         try:
 
             booking = Booking.objects.get(
@@ -242,6 +261,16 @@ class CancelBookingView(APIView):
         booking.status = "cancelled"
         booking.save()
 
+        # 🔔 NOTIFY TENANT
+        Notification.objects.create(
+            user=booking.tenant,
+            message=(
+                f"Your booking for "
+                f"{booking.property.title} "
+                f"was cancelled."
+            )
+        )
+
         # 🔥 MAKE PROPERTY AVAILABLE AGAIN
         property_obj = booking.property
         property_obj.status = "available"
@@ -253,3 +282,78 @@ class CancelBookingView(APIView):
                 "property_status": property_obj.status
             }
         )
+
+
+# =========================================
+# 📌 LANDLORD ANALYTICS
+# =========================================
+class LandlordAnalyticsView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        user = request.user
+
+        properties = user.property_set.all()
+
+        return Response({
+            "total_properties":
+                properties.count(),
+
+            "available_properties":
+                properties.filter(
+                    status="available"
+                ).count(),
+
+            "occupied_properties":
+                properties.filter(
+                    status="occupied"
+                ).count(),
+
+            "pending_bookings":
+                Booking.objects.filter(
+                    property__landlord=user,
+                    status="pending"
+                ).count(),
+
+            "approved_bookings":
+                Booking.objects.filter(
+                    property__landlord=user,
+                    status="approved"
+                ).count(),
+        })
+
+
+# =========================================
+# 📌 TENANT ANALYTICS
+# =========================================
+class TenantAnalyticsView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        user = request.user
+
+        bookings = user.tenant_bookings.all()
+
+        return Response({
+            "total_bookings":
+                bookings.count(),
+
+            "approved_bookings":
+                bookings.filter(
+                    status="approved"
+                ).count(),
+
+            "pending_bookings":
+                bookings.filter(
+                    status="pending"
+                ).count(),
+
+            "cancelled_bookings":
+                bookings.filter(
+                    status="cancelled"
+                ).count(),
+        })

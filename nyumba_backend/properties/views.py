@@ -290,16 +290,37 @@ class ReportView(APIView):
 
         booked = (
             properties.filter(
-                status="booked"
+                status__in=[
+                    "booked",
+                    "occupied"
+                ]
             ).count()
         )
 
-        total_income = (
-            bookings.aggregate(
-                total=Sum("booking_fee")
+        monthly_income = (
+            properties.filter(
+                status__in=[
+                    "booked",
+                    "occupied"
+                ]
+            ).aggregate(
+                total=Sum("price")
             )["total"]
             or 0
         )
+
+        total_income = properties.aggregate(
+            total=Sum("price")
+        )["total"] or 0
+
+        monthly_income = properties.filter(
+            status__in=[
+                "booked",
+                "occupied"
+            ]
+        ).aggregate(
+            total=Sum("price")
+        )["total"] or 0
 
         occupancy_rate = 0
 
@@ -313,6 +334,7 @@ class ReportView(APIView):
         # RESPONSE
         # -------------------------------------
         return Response({
+
             "total_properties":
                 total_properties,
 
@@ -323,8 +345,14 @@ class ReportView(APIView):
                 booked,
 
             "occupancy_rate":
-                round(occupancy_rate, 2),
+                round(
+                    occupancy_rate,
+                    2
+                ),
 
             "total_income":
                 total_income,
+
+            "monthly_income":
+                monthly_income,
         })

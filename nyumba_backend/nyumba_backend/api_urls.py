@@ -5,6 +5,7 @@ from properties.views import PropertyViewSet, ReportView
 from bookings.views import BookingViewSet, ApproveBookingView, CancelBookingView
 from inquiries.views import InquiryViewSet
 from payments.views import PaymentViewSet, MpesaPaymentView, AdminDashboardView
+from bookings.views import ( LandlordAnalyticsView, TenantAnalyticsView,)
 
 router = DefaultRouter()
 
@@ -30,9 +31,24 @@ urlpatterns = [
     path('admin/dashboard/', AdminDashboardView.as_view()),
     
     path('bookings/cancel-booking/',
-    CancelBookingView.as_view(),
-    name='cancel-booking'
+        CancelBookingView.as_view(),
+        name='cancel-booking'
+    ),
+
+    path(
+        'analytics/landlord/',
+        LandlordAnalyticsView.as_view(),
+    ),
+
+    path(
+        'analytics/tenant/',
+        TenantAnalyticsView.as_view(),
     ),
     # 🔥 ROUTER LAST
     path('', include(router.urls)),
+
+    path(
+    "notifications/",
+    include("notifications.urls")
+    ),
 ]

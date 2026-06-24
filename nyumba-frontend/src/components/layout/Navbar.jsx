@@ -1,6 +1,20 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
-import { Home } from "lucide-react";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  Home,
+  Bell,
+} from "lucide-react";
+
+import {
+  getProfile,
+  getNotifications,
+  markNotificationsRead,
+} from "../../services/api";
 
 import "../../styles/navbar.css";
 
@@ -8,9 +22,91 @@ function Navbar() {
 
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("access");
-  const role = localStorage.getItem("role");
+  const [showDropdown, setShowDropdown] =
+    useState(false);
 
+  const [user, setUser] =
+    useState(null);
+
+  const [notifications, setNotifications] =
+    useState([]);
+
+  const [showNotifications, setShowNotifications] =
+    useState(false);
+
+  const token =
+    localStorage.getItem("access");
+
+  const role =
+    localStorage.getItem("role");
+
+  const unreadNotifications =
+    notifications.filter(
+      (notification) =>
+        !notification.is_read
+    );
+
+  // =========================================
+  // FETCH USER + NOTIFICATIONS
+  // =========================================
+  useEffect(() => {
+
+    const fetchUser = async () => {
+
+      try {
+
+        const data =
+          await getProfile();
+
+        setUser(data);
+
+      } catch (error) {
+
+        console.error(error);
+      }
+    };
+
+    const fetchNotifications =
+      async () => {
+
+          try {
+
+            const data =
+              await getNotifications();
+
+            console.log(
+              "NOTIFICATIONS:",
+              data
+            );
+
+            setNotifications(
+
+              Array.isArray(data)
+                ? data
+                : data.results || []
+
+            );
+
+          } catch (error) {
+
+            console.error(error);
+
+            setNotifications([]);
+          }
+        };
+
+    if (token) {
+
+      fetchUser();
+
+      fetchNotifications();
+    }
+
+  }, [token]);
+
+  // =========================================
+  // LOGOUT
+  // =========================================
   const handleLogout = () => {
 
     localStorage.clear();
@@ -19,15 +115,21 @@ function Navbar() {
   };
 
   return (
+
     <nav className="navbar">
 
       <div className="navbar-container">
 
-        <Link to="/" className="logo">
+        <Link
+          to="/"
+          className="logo"
+        >
 
           <Home size={32} />
 
-          <span>Nyumba Digital</span>
+          <span>
+            Nyumba Digital
+          </span>
 
         </Link>
 
@@ -72,6 +174,7 @@ function Navbar() {
           {token && (
 
             <>
+
               {role === "landlord" && (
 
                 <Link
@@ -80,8 +183,20 @@ function Navbar() {
                 >
                   Dashboard
                 </Link>
-
               )}
+
+              <Link
+                to="/reports"
+                className="login-btn"
+              >
+                Reports
+              </Link>
+
+              <Link
+                to="/landlord/inquiries"
+              >
+                Inquiries
+              </Link>
 
               {role === "tenant" && (
 
@@ -94,14 +209,167 @@ function Navbar() {
 
               )}
 
-              <button
-                className="register-btn"
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
+              {/* =========================================
+                  NOTIFICATION BELL
+              ========================================= */}
+              <div className="notification-wrapper">
+
+                <button
+                  className="notification-btn"
+                  onClick={async () => {
+
+                    setShowNotifications(
+                      !showNotifications
+                    );
+
+                    try {
+
+                      await markNotificationsRead();
+
+                      setNotifications(
+                        notifications.map(
+                          (notification) => ({
+                            ...notification,
+                            is_read: true,
+                          })
+                        )
+                      );
+
+                    } catch (error) {
+
+                      console.error(error);
+
+                    }
+
+                  }}
+                >
+
+                  <Bell size={20} />
+
+                  {unreadNotifications.length > 0 && (
+
+                    <span className="notification-count">
+
+                      {unreadNotifications.length}
+
+                    </span>
+
+                  )}
+
+                </button>
+
+                {showNotifications && (
+
+                  <div className="notification-dropdown">
+
+                    <h4>
+                      Notifications
+                    </h4>
+
+                    {notifications.length === 0 ? (
+
+                      <p className="empty-notifications">
+                        No notifications
+                      </p>
+
+                    ) : (
+
+                      Array.isArray(notifications) &&
+                      notifications.map(
+                        (notification) => (
+
+                          <div
+                            key={notification.id}
+                            className="notification-item"
+                          >
+
+                            {notification.message}
+
+                          </div>
+
+                        )
+                      )
+
+                    )}
+
+                  </div>
+
+                )}
+
+              </div>
+
+              {/* =========================================
+                  PROFILE DROPDOWN
+              ========================================= */}
+              <div className="profile-dropdown">
+
+                <button
+                  className="profile-trigger"
+                  onClick={() =>
+                    setShowDropdown(
+                      !showDropdown
+                    )
+                  }
+                >
+
+                  <div className="profile-avatar">
+
+                    {user?.username
+                      ? user.username
+                          .charAt(0)
+                          .toUpperCase()
+                      : "U"}
+
+                  </div>
+
+                  <span>
+
+                    {user?.username ||
+                      "Profile"}
+
+                  </span>
+
+                  <span className="arrow">
+                    ▼
+                  </span>
+
+                </button>
+
+                {showDropdown && (
+
+                  <div className="dropdown-menu">
+
+                    <Link
+                      to="/profile"
+                      className="dropdown-item"
+                    >
+                      👤 Profile
+                    </Link>
+
+                    <Link
+                      to="/change-password"
+                      className="dropdown-item"
+                    >
+                      🔒 Change Password
+                    </Link>
+
+                    <button
+                      className="dropdown-item logout-item"
+                      onClick={
+                        handleLogout
+                      }
+                    >
+                      🚪 Logout
+                    </button>
+
+                  </div>
+
+                )}
+
+              </div>
 
             </>
+
           )}
 
         </div>
@@ -109,6 +377,7 @@ function Navbar() {
       </div>
 
     </nav>
+
   );
 }
 

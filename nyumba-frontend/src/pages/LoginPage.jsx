@@ -48,6 +48,16 @@ function LoginPage() {
         data.role
       );
 
+      localStorage.setItem(
+        "username",
+        formData.username
+      );
+
+      localStorage.setItem(
+        "username",
+        data.username
+      );
+
       alert("Login successful");
 
       // ROLE REDIRECT

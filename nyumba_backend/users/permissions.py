@@ -1,4 +1,29 @@
 from rest_framework.permissions import BasePermission
+from rest_framework import serializers
+from .models import User
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+
+        fields = [
+            "id",
+            "username",
+            "email",
+            "phone",
+            "role",
+            "avatar",
+            "date_joined",
+        ]
+
+        read_only_fields = [
+            "id",
+            "username",
+            "role",
+            "date_joined",
+        ]
 
 class IsLandlord(BasePermission):
     def has_permission(self, request, view):

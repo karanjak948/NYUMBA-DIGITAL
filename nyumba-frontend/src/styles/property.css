@@ -151,3 +151,24 @@
 
   border-radius: 20px;
 }
+
+.property-actions {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-top: 30px;
+}
+
+.property-actions .book-btn {
+  min-width: 220px;
+  height: fit-content;
+}
+
+.inquiry-box {
+  flex: 1;
+}
+
+.inquiry-box textarea {
+  width: 100%;
+  min-height: 120px;
+}
