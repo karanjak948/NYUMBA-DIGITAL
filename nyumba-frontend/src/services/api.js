@@ -111,7 +111,8 @@ export const getProperties = async () => {
   const response =
     await API.get("properties/");
 
-  return response.data;
+  return response.data.results ||
+         response.data;
 };
 
 
@@ -363,3 +364,26 @@ export const replyInquiry = async (
 
   return response.data;
 };
+
+export const deleteInquiry = async (
+  inquiryId
+) => {
+
+  const response = await API.delete(
+    `inquiries/delete/${inquiryId}/`
+  );
+
+  return response.data;
+};
+
+export const markNotificationRead =
+  async (id) => {
+
+    const response =
+      await API.post(
+        `notifications/read/${id}/`
+      );
+
+    return response.data;
+};
+

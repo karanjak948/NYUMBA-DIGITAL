@@ -185,15 +185,18 @@ function Navbar() {
                 </Link>
               )}
 
-              <Link
-                to="/reports"
-                className="login-btn"
-              >
-                Reports
-              </Link>
+              {localStorage.getItem("role") === "landlord" && (
+                <Link 
+                  to="/reports"
+                  className="login-btn"
+                >
+                  Reports
+                </Link>
+              )}
 
               <Link
                 to="/landlord/inquiries"
+                className="inquiries-btn"
               >
                 Inquiries
               </Link>
@@ -214,13 +217,10 @@ function Navbar() {
               ========================================= */}
               <div className="notification-wrapper">
 
-                <button
+                <Link
+                  to="/notifications"
                   className="notification-btn"
                   onClick={async () => {
-
-                    setShowNotifications(
-                      !showNotifications
-                    );
 
                     try {
 
@@ -244,7 +244,7 @@ function Navbar() {
                   }}
                 >
 
-                  <Bell size={20} />
+                  🔔●
 
                   {unreadNotifications.length > 0 && (
 
@@ -256,45 +256,7 @@ function Navbar() {
 
                   )}
 
-                </button>
-
-                {showNotifications && (
-
-                  <div className="notification-dropdown">
-
-                    <h4>
-                      Notifications
-                    </h4>
-
-                    {notifications.length === 0 ? (
-
-                      <p className="empty-notifications">
-                        No notifications
-                      </p>
-
-                    ) : (
-
-                      Array.isArray(notifications) &&
-                      notifications.map(
-                        (notification) => (
-
-                          <div
-                            key={notification.id}
-                            className="notification-item"
-                          >
-
-                            {notification.message}
-
-                          </div>
-
-                        )
-                      )
-
-                    )}
-
-                  </div>
-
-                )}
+                </Link>
 
               </div>
 

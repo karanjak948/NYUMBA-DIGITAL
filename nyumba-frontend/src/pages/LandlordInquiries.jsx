@@ -1,24 +1,17 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState,} from "react";
 
-import Navbar
-from "../components/layout/Navbar";
+import Navbar from "../components/layout/Navbar";
 
-import {
-  getInquiries,
-  replyInquiry,
-} from "../services/api";
+import { getInquiries, replyInquiry, deleteInquiry,} from "../services/api";;
+
+import "../styles/landlord-inquiries.css";
 
 function LandlordInquiries() {
 
-  const [inquiries,
-         setInquiries] =
+  const [inquiries, setInquiries] =
     useState([]);
 
-  const [reply,
-         setReply] =
+  const [replies, setReplies] =
     useState({});
 
   useEffect(() => {
@@ -41,7 +34,7 @@ function LandlordInquiries() {
 
         console.error(error);
       }
-  };
+    };
 
   const handleReply =
     async (id) => {
@@ -50,7 +43,7 @@ function LandlordInquiries() {
 
         await replyInquiry(
           id,
-          reply[id]
+          replies[id]
         );
 
         alert(
@@ -63,7 +56,29 @@ function LandlordInquiries() {
 
         console.error(error);
       }
-  };
+    };
+
+    const handleDelete = async (id) => {
+
+      const confirmDelete =
+        window.confirm(
+          "Delete this inquiry?"
+        );
+
+      if (!confirmDelete) return;
+
+      try {
+
+        await deleteInquiry(id);
+
+        fetchInquiries();
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+    };
 
   return (
 
@@ -84,75 +99,137 @@ function LandlordInquiries() {
               className="inquiry-card"
             >
 
-              <h3>
-                {
-                  inquiry.property_title
-                }
-              </h3>
+              <div className="inquiry-left">
 
-              <p>
-                <strong>
-                  Tenant:
-                </strong>
+                <div className="avatar">
 
-                {" "}
+                  {inquiry.tenant_username
+                    ?.charAt(0)
+                    .toUpperCase()}
 
-                {
-                  inquiry.tenant_username
-                }
-              </p>
-
-              <p>
-                {
-                  inquiry.message
-                }
-              </p>
-
-              {inquiry.landlord_reply ? (
+                </div>
 
                 <div>
 
-                  <strong>
-                    Reply:
-                  </strong>
+                  <h3 className="property-name">
 
-                  <p>
-                    {
-                      inquiry.landlord_reply
-                    }
+                    {inquiry.property_title}
+
+                  </h3>
+
+                  <p className="location">
+
+                    {inquiry.property_location}
+
+                  </p>
+
+                  <div className="message-box">
+
+                    {inquiry.message}
+
+                  </div>
+
+                  <p className="message-time">
+
+                    {new Date(
+                      inquiry.created_at
+                    ).toLocaleString()}
+
                   </p>
 
                 </div>
 
-              ) : (
+              </div>
 
-                <>
-                  <textarea
-                    value={
-                      reply[
-                        inquiry.id
-                      ] || ""
-                    }
-                    onChange={(e) =>
-                      setReply({
-                        ...reply,
-                        [inquiry.id]:
-                        e.target.value
-                      })
-                    }
-                  />
+              <div className="inquiry-right">
 
-                  <button
-                    onClick={() =>
-                      handleReply(
-                        inquiry.id
-                      )
-                    }
-                  >
-                    Send Reply
-                  </button>
-                </>
-              )}
+                <div>
+
+                  <h4 className="tenant-name">
+
+                    {inquiry.tenant_username}
+
+                  </h4>
+
+                </div>
+
+                {inquiry.landlord_reply ? (
+
+                  <>
+
+                    <div className="status-replied">
+
+                      REPLIED
+
+                    </div>
+
+                    <div className="reply-preview">
+
+                      <strong>
+                        Your Reply:
+                      </strong>
+
+                      <p>
+                        {inquiry.landlord_reply}
+                      </p>
+
+                    </div>
+
+                    <button
+                      className="delete-inquiry-btn"
+                      onClick={() =>
+                        handleDelete(inquiry.id)
+                      }
+                    >
+                      Delete Inquiry
+                    </button>
+
+                  </>
+
+                ) : (
+
+                  <>
+
+                    <div className="status-pending">
+
+                      PENDING
+
+                    </div>
+
+                    <div className="reply-box">
+
+                      <textarea
+                        value={
+                          replies[inquiry.id] || ""
+                        }
+                        onChange={(e) =>
+                          setReplies({
+                            ...replies,
+                            [inquiry.id]:
+                              e.target.value,
+                          })
+                        }
+                        placeholder="Type your reply..."
+                      />
+
+                    </div>
+
+                    <button
+                      className="reply-btn"
+                      onClick={() =>
+                        handleReply(
+                          inquiry.id
+                        )
+                      }
+                    >
+                      Send Reply
+                    </button>
+
+                  </>
+
+                )}
+
+              </div>
 
             </div>
 

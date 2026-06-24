@@ -43,22 +43,30 @@ class RegisterSerializer(serializers.ModelSerializer):
 # =========================================
 # 🔥 JWT CUSTOM SERIALIZER
 # =========================================
-class CustomTokenSerializer(TokenObtainPairSerializer):
+class CustomTokenSerializer( TokenObtainPairSerializer):
 
     @classmethod
     def get_token(cls, user):
+
         token = super().get_token(user)
 
-        # 🔥 ADD ROLE INTO TOKEN
-        token['role'] = user.role
+        token["role"] = user.role
 
         return token
 
     def validate(self, attrs):
+
         data = super().validate(attrs)
 
-        # 🔥 ADD ROLE INTO RESPONSE
-        data['role'] = self.user.role
+        data["role"] = self.user.role
+
+        data["username"] = (
+            self.user.username
+        )
+
+        data["email"] = (
+            self.user.email
+        )
 
         return data
 

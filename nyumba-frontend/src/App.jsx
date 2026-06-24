@@ -13,6 +13,8 @@ import EditPropertyPage from "./pages/EditPropertyPage";
 import ProfilePage from "./pages/ProfilePage";
 import LandlordReports from "./pages/LandlordReports";
 import LandlordInquiries from "./pages/LandlordInquiries";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/reports" element={ <LandlordReports /> } />
       <Route path="/landlord/inquiries" element={ <LandlordInquiries /> } />
+      <Route path="/change-password" element={ <ChangePasswordPage /> } />
+      <Route path="/notifications" element={<NotificationsPage />} />
       
 
       {/* Protected Routes */}

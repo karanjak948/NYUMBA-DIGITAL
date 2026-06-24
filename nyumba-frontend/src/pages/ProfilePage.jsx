@@ -33,6 +33,8 @@ function ProfilePage() {
 
       const data = await getProfile();
 
+      console.log("PROFILE DATA:", data);
+
       setProfile(data);
 
     } catch (error) {
@@ -66,6 +68,10 @@ function ProfilePage() {
           email: profile.email,
           phone: profile.phone,
         });
+      console.log(
+        "UPDATED PROFILE:",
+        updatedProfile
+      );
 
       setProfile(updatedProfile);
 
@@ -195,7 +201,7 @@ function ProfilePage() {
 
               <input
                 type="text"
-                value={profile.username}
+                value={profile.username || ""}
                 disabled
               />
 
@@ -206,7 +212,7 @@ function ProfilePage() {
               <input
                 type="email"
                 name="email"
-                value={profile.email}
+                value={profile.email || ""}
                 onChange={handleChange}
               />
 
@@ -217,7 +223,7 @@ function ProfilePage() {
               <input
                 type="text"
                 name="phone"
-                value={profile.phone}
+                value={profile.phone || ""}
                 onChange={handleChange}
               />
 

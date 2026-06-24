@@ -1,4 +1,8 @@
 import {
+  useNavigate
+} from "react-router-dom";
+
+import {
   useEffect,
   useState,
 } from "react";
@@ -17,11 +21,8 @@ function LandlordReports() {
   const [report, setReport] =
     useState(null);
 
-  useEffect(() => {
-
-    fetchReport();
-
-  }, []);
+  const navigate =
+    useNavigate();
 
   const fetchReport =
     async () => {
@@ -41,6 +42,24 @@ function LandlordReports() {
       }
     };
 
+useEffect(() => {
+
+    if (
+      localStorage.getItem("role")
+      !== "landlord"
+    ) {
+
+      navigate(
+        "/tenant/dashboard"
+      );
+
+      return;
+    }
+
+    fetchReport();
+
+  }, []);
+
   return (
 
     <div>
@@ -56,55 +75,77 @@ function LandlordReports() {
         <div className="analytics-grid">
 
           <div className="analytics-card">
+
             <h2>
               {report?.total_properties || 0}
             </h2>
 
-            <p>Total Properties</p>
+            <p>
+              Total Properties
+            </p>
+
           </div>
 
           <div className="analytics-card">
+
             <h2>
               {report?.available_properties || 0}
             </h2>
 
-            <p>Available</p>
+            <p>
+              Available
+            </p>
+
           </div>
 
-          <div className="analytics-card">
-            <h2>
-              {report?.booked_properties || 0}
-            </h2>
+            <div className="analytics-card">
 
-            <p>Occupied</p>
-          </div>
+              <h2>
+                {report?.occupied_properties || 0}
+              </h2>
+
+              <p>
+                Occupied
+              </p>
+
+            </div>
 
           <div className="analytics-card">
+
             <h2>
               {report?.occupancy_rate || 0}%
             </h2>
 
-            <p>Occupancy Rate</p>
+            <p>
+              Occupancy Rate
+            </p>
+
           </div>
 
           <div className="analytics-card">
+
             <h2>
-              KES
-              {" "}
+              KES{" "}
               {report?.monthly_income || 0}
             </h2>
 
-            <p>Monthly Income</p>
+            <p>
+              Monthly Income
+            </p>
+
           </div>
 
           <div className="analytics-card">
-                <h2>
-                KES
-                {" "}
-                {report?.total_income || 0}
-                </h2>
 
-                <p>Total Income</p>
+            <h2>
+              KES{" "}
+              {report?.total_income || 0}
+            </h2>
+
+            <p>
+              Total Income
+            </p>
+
           </div>
 
         </div>

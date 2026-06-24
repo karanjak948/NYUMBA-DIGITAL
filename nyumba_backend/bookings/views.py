@@ -8,6 +8,7 @@ from notifications.models import Notification
 from .models import Booking
 from .serializers import BookingSerializer
 from properties.models import Property
+from decimal import Decimal
 
 
 # =========================================
@@ -84,6 +85,16 @@ class BookingViewSet(viewsets.ModelViewSet):
                 id=property_id
             )
 
+            print("PROPERTY PRICE:", property_obj.price)
+            print("PROPERTY TYPE:", type(property_obj.price))
+
+            booking_fee = (
+                property_obj.price *
+                Decimal("0.10")
+            )
+
+            print("BOOKING FEE:", booking_fee)
+
         except Property.DoesNotExist:
 
             return Response(
@@ -104,13 +115,16 @@ class BookingViewSet(viewsets.ModelViewSet):
             )
 
         # 🔥 CREATE BOOKING
+
+        booking_fee = (
+            property_obj.price *
+            Decimal("0.10")
+        )
+
         booking = Booking.objects.create(
             property=property_obj,
             tenant=request.user,
-            booking_fee=request.data.get(
-                "booking_fee",
-                0
-            ),
+            booking_fee=booking_fee,
             status="pending"
         )
 
@@ -192,6 +206,20 @@ class ApproveBookingView(APIView):
         # 🔥 APPROVE BOOKING
         booking.status = "approved"
         booking.save()
+
+        property_obj = booking.property
+
+        property_obj.status = "occupied"
+
+        property_obj.save()
+
+        Booking.objects.filter(
+            property=booking.property
+            ).exclude(
+                id=booking.id
+            ).update(
+                status="cancelled"
+            )
 
         # 🔔 NOTIFY TENANT
         Notification.objects.create(

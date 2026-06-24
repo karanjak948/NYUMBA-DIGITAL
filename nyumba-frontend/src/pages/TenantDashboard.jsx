@@ -44,7 +44,7 @@ function TenantDashboard() {
             Welcome,
             {" "}
             {username}
-            👋
+            👋🤗
           </h1>
 
           <p>

@@ -50,11 +50,6 @@ function LoginPage() {
 
       localStorage.setItem(
         "username",
-        formData.username
-      );
-
-      localStorage.setItem(
-        "username",
         data.username
       );
 

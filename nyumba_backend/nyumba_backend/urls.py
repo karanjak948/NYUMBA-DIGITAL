@@ -24,7 +24,7 @@ urlpatterns = [
     path('api/', include('nyumba_backend.api_urls')),
     path("api/users/", include("users.urls")),
     path("api/notifications/", include("notifications.urls")),
-    path("api/inquiries/", include("inquiries.urls")),
+    # path("api/inquiries/", include("inquiries.urls")),
 ] 
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

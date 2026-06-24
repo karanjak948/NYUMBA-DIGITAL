@@ -2,13 +2,11 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
 from django.utils import timezone
-
 from .models import Inquiry
 from .serializers import InquirySerializer
-
 from notifications.models import Notification
+
 
 
 class InquiryViewSet(viewsets.ModelViewSet):
@@ -118,15 +116,37 @@ class ReplyInquiryView(APIView):
                 "message": "Reply sent"
             }
         )
-    
-class ReplyInquiryView(APIView):
+
+class DeleteInquiryView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def delete(self, request, inquiry_id):
 
-        print("REPLY VIEW HIT")
+        try:
+            inquiry = Inquiry.objects.get(
+                id=inquiry_id
+            )
 
-        return Response({
-            "message": "Reply endpoint working"
-        })
+        except Inquiry.DoesNotExist:
+
+            return Response(
+                {"error": "Inquiry not found"},
+                status=404
+            )
+
+        # Only landlord owner can delete
+        if (
+            request.user.role != "landlord"
+            or inquiry.property.landlord != request.user
+        ):
+            return Response(
+                {"error": "Unauthorized"},
+                status=403
+            )
+
+        inquiry.delete()
+
+        return Response(
+            {"message": "Inquiry deleted"}
+        )

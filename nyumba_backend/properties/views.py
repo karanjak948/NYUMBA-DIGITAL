@@ -32,15 +32,39 @@ class PropertyViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def mark_vacant(self, request, pk=None):
 
-        property = self.get_object()
+        property_obj = self.get_object()
 
-        property.status = "available"
+        Booking.objects.filter(
+            property=property_obj,
+            status="approved"
+        ).update(
+            status="cancelled"
+        )
+        approved_booking = Booking.objects.filter(
+            property=property_obj,
+            status="approved"
+        ).first()
 
-        property.save()
+        if approved_booking:
+
+            Notification.objects.create(
+                user=approved_booking.tenant,
+                message=(
+                    f"{property_obj.title} "
+                    f"is no longer assigned to you."
+                )
+            )
+
+            approved_booking.status = "cancelled"
+            approved_booking.save()
+
+        property_obj.status = "available"
+
+        property_obj.save()
 
         return Response({
             "message":
-            "Property marked as vacant"
+            "Property marked vacant"
         })
 
     # =========================================
@@ -243,77 +267,40 @@ class ReportView(APIView):
 
     def get(self, request):
 
+        if request.user.role != "landlord":
+
+            return Response(
+                {
+                    "error":
+                    "Only landlords can access reports"
+                },
+                status=403
+            )
+
         user = request.user
 
-        # -------------------------------------
-        # LANDLORD REPORT
-        # -------------------------------------
-        if user.role == "landlord":
-
-            properties = (
-                Property.objects.filter(
-                    landlord=user
-                )
-            )
-
-            bookings = (
-                Booking.objects.filter(
-                    property__landlord=user
-                )
-            )
-
-        # -------------------------------------
-        # ADMIN REPORT
-        # -------------------------------------
-        else:
-
-            properties = (
-                Property.objects.all()
-            )
-
-            bookings = (
-                Booking.objects.all()
-            )
-
-        # -------------------------------------
-        # CALCULATIONS
-        # -------------------------------------
-        total_properties = (
-            properties.count()
+        properties = Property.objects.filter(
+            landlord=user
         )
 
-        available = (
-            properties.filter(
-                status="available"
-            ).count()
+        bookings = Booking.objects.filter(
+            property__landlord=user
         )
 
-        booked = (
-            properties.filter(
-                status__in=[
-                    "booked",
-                    "occupied"
-                ]
-            ).count()
-        )
+        total_properties = properties.count()
 
-        monthly_income = (
-            properties.filter(
-                status__in=[
-                    "booked",
-                    "occupied"
-                ]
-            ).aggregate(
-                total=Sum("price")
-            )["total"]
-            or 0
-        )
+        available = properties.filter(
+            status="available"
+        ).count()
 
-        total_income = properties.aggregate(
-            total=Sum("price")
-        )["total"] or 0
+        occupied_properties = properties.filter(
+            status__in=[
+                "booked",
+                "occupied"
+            ]
+        ).count()
 
-        monthly_income = properties.filter(
+        rental_income = properties.filter(
             status__in=[
                 "booked",
                 "occupied"
@@ -322,17 +309,28 @@ class ReportView(APIView):
             total=Sum("price")
         )["total"] or 0
 
+        booking_income = bookings.filter(
+            status="approved"
+        ).aggregate(
+            total=Sum("booking_fee")
+        )["total"] or 0
+
+        monthly_income = rental_income
+
+        total_income = (
+            rental_income +
+            booking_income
+        )
+
         occupancy_rate = 0
 
         if total_properties > 0:
 
             occupancy_rate = (
-                booked / total_properties
+                occupied_properties /
+                total_properties
             ) * 100
 
-        # -------------------------------------
-        # RESPONSE
-        # -------------------------------------
         return Response({
 
             "total_properties":
@@ -341,8 +339,8 @@ class ReportView(APIView):
             "available_properties":
                 available,
 
-            "booked_properties":
-                booked,
+            "occupied_properties":
+                occupied_properties,
 
             "occupancy_rate":
                 round(
@@ -350,9 +348,15 @@ class ReportView(APIView):
                     2
                 ),
 
-            "total_income":
-                total_income,
+            "rental_income":
+                rental_income,
+
+            "booking_income":
+                booking_income,
 
             "monthly_income":
                 monthly_income,
+
+            "total_income":
+                total_income,
         })

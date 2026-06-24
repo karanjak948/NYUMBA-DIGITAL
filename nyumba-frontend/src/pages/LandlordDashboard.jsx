@@ -10,6 +10,7 @@ import Navbar from "../components/layout/Navbar";
 import AnalyticsCards from "../components/dashboard/AnalyticsCards";
 
 import {
+  getProperties,
   getBookings,
   approveBooking,
   deleteProperty,
@@ -34,14 +35,35 @@ function LandlordDashboard() {
 
   const navigate = useNavigate();
 
+  // get propeties
+  const [properties, setProperties] =
+    useState([]); 
   // =========================================
   // INITIAL LOAD
   // =========================================
   useEffect(() => {
+    fetchProperties();
     fetchBookings();
     fetchAnalytics();
     fetchProfile();
   }, []);
+
+  const fetchProperties =
+    async () => {
+
+      try {
+
+        const data =
+          await getProperties();
+
+        setProperties(data);
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+  };
 
   // =========================================
   // FETCH BOOKINGS
@@ -125,6 +147,7 @@ function LandlordDashboard() {
 
       alert("Property deleted");
 
+      fetchProperties();
       fetchBookings();
       fetchAnalytics();
     } catch (error) {
@@ -143,6 +166,7 @@ function LandlordDashboard() {
 
       alert("Property marked vacant");
 
+      fetchProperties();
       fetchBookings();
       fetchAnalytics();
     } catch (error) {
@@ -159,6 +183,7 @@ function LandlordDashboard() {
 
       alert("Property marked occupied");
 
+      fetchProperties();
       fetchBookings();
       fetchAnalytics();
     } catch (error) {
@@ -177,7 +202,7 @@ function LandlordDashboard() {
             Welcome,
               {" "}
               {user?.username || "Landlord"}
-              👋
+              👋🤗
           </h1>
 
           <p>
@@ -258,6 +283,89 @@ function LandlordDashboard() {
           />
         </div>
 
+        {properties.map((property) => (
+
+          <div
+            key={property.id}
+            className="dashboard-card"
+          >
+
+            <h3>
+              {property.title}
+            </h3>
+
+            <p>
+              {property.location}
+            </p>
+
+            <p>
+              KES {property.price}
+            </p>
+
+            <span
+              className={`status-badge ${property.status}`}
+            >
+              {property.status}
+            </span>
+
+            <div className="dashboard-actions">
+
+              <button
+                className="edit-btn"
+                onClick={() =>
+                  navigate(
+                    `/edit-property/${property.id}`
+                  )
+                }
+              >
+                Edit
+              </button>
+
+              {property.status === "available" ? (
+
+                <button
+                  className="vacant-btn"
+                  onClick={() =>
+                    handleOccupied(
+                      property.id
+                    )
+                  }
+                >
+                  Mark Occupied
+                </button>
+
+              ) : (
+
+                <button
+                  className="vacant-btn"
+                  onClick={() =>
+                    handleVacant(
+                      property.id
+                    )
+                  }
+                >
+                  Mark Vacant
+                </button>
+
+              )}
+
+              <button
+                className="delete-btn"
+                onClick={() =>
+                  handleDelete(
+                    property.id
+                  )
+                }
+              >
+                Delete
+              </button>
+
+            </div>
+
+          </div>
+
+        ))}
+
         {/* BOOKINGS GRID */}
         <div className="dashboard-grid">
           {bookings.length > 0 ? (
@@ -295,6 +403,15 @@ function LandlordDashboard() {
                       {booking.tenant_username}
                     </strong>
                   </p>
+
+                  <p>
+                    Booking Fee:
+                    <strong>
+                      {" "}
+                      KES {booking.booking_fee}
+                    </strong>
+                  </p>
+
                 </div>
 
                 {/* ACTIONS */}

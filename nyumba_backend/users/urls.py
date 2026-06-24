@@ -1,4 +1,5 @@
 from django.urls import path
+from .views import ChangePasswordView
 
 from .views import (
     RegisterView,
@@ -27,6 +28,11 @@ urlpatterns = [
         "login/refresh/",
         TokenRefreshView.as_view(),
         name="token_refresh",
+    ),
+
+    path(
+        "change-password/",
+        ChangePasswordView.as_view(),
     ),
 
     path(

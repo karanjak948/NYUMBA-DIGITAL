@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from .serializers import UserSerializer
+from django.contrib.auth.hashers import check_password
 from rest_framework.permissions import (
     AllowAny,
     IsAuthenticated,
@@ -93,24 +94,20 @@ class ProfileView(APIView):
 
     def get(self, request):
 
-        serializer = (
-            ProfileSerializer(
-                request.user
-            )
+        serializer = ProfileSerializer(
+            request.user
         )
 
         return Response(
             serializer.data
         )
 
-    def put(self, request):
+    def patch(self, request):
 
-        serializer = (
-            ProfileSerializer(
-                request.user,
-                data=request.data,
-                partial=True,
-            )
+        serializer = ProfileSerializer(
+            request.user,
+            data=request.data,
+            partial=True
         )
 
         if serializer.is_valid():
@@ -123,13 +120,56 @@ class ProfileView(APIView):
 
         return Response(
             serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST,
+            status=status.HTTP_400_BAD_REQUEST
         )
     
-class ProfileView(RetrieveUpdateAPIView):
+class ChangePasswordView(APIView):
 
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [
+        IsAuthenticated
+    ]
 
-    def get_object(self):
-        return self.request.user
+    def post(self, request):
+
+        old_password = request.data.get(
+            "old_password"
+        )
+
+        new_password = request.data.get(
+            "new_password"
+        )
+
+        user = request.user
+
+        if not user.check_password(
+            old_password
+        ):
+
+            return Response(
+                {
+                    "error":
+                    "Current password is incorrect"
+                },
+                status=400
+            )
+
+        user.set_password(
+            new_password
+        )
+
+        user.save()
+
+        return Response(
+            {
+                "message":
+                "Password changed successfully"
+            }
+        )
+    
+# class ProfileView(RetrieveUpdateAPIView):
+
+#     serializer_class = UserSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_object(self):
+#         return self.request.user

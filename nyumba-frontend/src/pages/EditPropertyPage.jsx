@@ -93,10 +93,15 @@ function EditPropertyPage() {
       Object.keys(formData).forEach(
         (key) => {
 
-          data.append(
-            key,
-            formData[key]
-          );
+          if (key !== "image") {
+
+            data.append(
+              key,
+              formData[key]
+            );
+
+          }
+
         }
       );
 
@@ -107,6 +112,15 @@ function EditPropertyPage() {
           "image",
           image
         );
+      }
+
+      for (let pair of data.entries()) {
+
+        console.log(
+          pair[0],
+          pair[1]
+        );
+
       }
 
       // 🔥 PATCH REQUEST
