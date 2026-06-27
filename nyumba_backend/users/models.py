@@ -27,5 +27,9 @@ class User(AbstractUser):
         null=True
     )
 
+    is_active_account = models.BooleanField(
+        default=True
+    )
+
     def __str__(self):
         return self.username

@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import BookingViewSet, ApproveBookingView
+from .views import BookingViewSet, ApproveBookingView, AdminApproveBookingView
 from .views import (LandlordAnalyticsView, TenantAnalyticsView,)
 
 router = DefaultRouter()
@@ -15,6 +15,7 @@ urlpatterns = [
         ApproveBookingView.as_view(),
         name='approve-booking'
     ),
+    path("admin-approve-booking/<int:booking_id>/", AdminApproveBookingView.as_view()),
 
     path(
         "analytics/landlord/",

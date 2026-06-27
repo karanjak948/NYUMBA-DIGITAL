@@ -239,6 +239,84 @@ class ApproveBookingView(APIView):
         )
 
 
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
+
+from .models import Booking
+from properties.models import Property
+from notifications.models import Notification
+
+
+# =========================================
+# 📌 ADMIN APPROVE BOOKING (OVERRIDE)
+# =========================================
+class AdminApproveBookingView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        # 🔥 STRICT ADMIN CHECK
+        if not (request.user.is_superuser or request.user.role == "admin"):
+            return Response(
+                {"error": "Unauthorized"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        booking_id = request.data.get("booking")
+
+        if not booking_id:
+            return Response(
+                {"error": "booking ID is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            booking = Booking.objects.get(id=booking_id)
+
+        except Booking.DoesNotExist:
+            return Response(
+                {"error": "Booking not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # 🔥 ALREADY APPROVED CHECK
+        if booking.status == "approved":
+            return Response(
+                {"error": "Booking already approved"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 🔥 APPROVE BOOKING
+        booking.status = "approved"
+        booking.save()
+
+        # 🔥 UPDATE PROPERTY STATUS
+        property_obj = booking.property
+        property_obj.status = "occupied"
+        property_obj.save()
+
+        # 🔥 CANCEL OTHER BOOKINGS FOR SAME PROPERTY
+        Booking.objects.filter(
+            property=property_obj
+        ).exclude(
+            id=booking.id
+        ).update(status="cancelled")
+
+        # 🔔 NOTIFY TENANT
+        Notification.objects.create(
+            user=booking.tenant,
+            message=f"Your booking for {property_obj.title} has been approved by admin."
+        )
+
+        return Response({
+            "message": "Booking approved by admin",
+            "booking_id": booking.id,
+            "status": booking.status
+        })
+
 # =========================================
 # 📌 CANCEL BOOKING
 # =========================================

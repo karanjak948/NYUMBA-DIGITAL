@@ -1,15 +1,12 @@
 import { useState } from "react";
-
 import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/layout/Navbar";
-
 import { loginUser } from "../services/auth";
 
 import "../styles/landing.css";
 
 function LoginPage() {
-
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -18,7 +15,6 @@ function LoginPage() {
   });
 
   const handleChange = (e) => {
-
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -26,47 +22,33 @@ function LoginPage() {
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
 
     try {
-
       const data = await loginUser(formData);
 
-      localStorage.setItem(
-        "access",
-        data.access
-      );
-
-      localStorage.setItem(
-        "refresh",
-        data.refresh
-      );
-
-      localStorage.setItem(
-        "role",
-        data.role
-      );
-
-      localStorage.setItem(
-        "username",
-        data.username
-      );
+      // STORE AUTH DATA
+      localStorage.setItem("access", data.access);
+      localStorage.setItem("refresh", data.refresh);
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("username", data.username);
 
       alert("Login successful");
 
-      // ROLE REDIRECT
-      if (data.role === "landlord") {
 
+      // ROLE-BASED REDIRECT
+      
+      if (data.role === "admin") {
+        navigate("/admin/dashboard");
+
+      } else if (data.role === "landlord") {
         navigate("/landlord/dashboard");
 
       } else {
-
         navigate("/tenant/dashboard");
       }
 
     } catch (error) {
-
       console.error(error);
 
       alert(
@@ -78,16 +60,13 @@ function LoginPage() {
 
   return (
     <div>
-
       <Navbar />
 
       <div className="auth-page">
-
         <form
           className="auth-form"
           onSubmit={handleSubmit}
         >
-
           <h2>Login</h2>
 
           <input
@@ -107,11 +86,8 @@ function LoginPage() {
           <button type="submit">
             Login
           </button>
-
         </form>
-
       </div>
-
     </div>
   );
 }

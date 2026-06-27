@@ -147,6 +147,10 @@ function Navbar() {
             About
           </a>
 
+          {role === "admin" && (
+            <Link to="/admin/dashboard">Admin</Link>
+          )}
+
         </div>
 
         <div className="nav-buttons">

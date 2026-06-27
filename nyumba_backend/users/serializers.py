@@ -4,9 +4,7 @@ from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
-# =========================================
 # 🔥 USER SERIALIZER
-# =========================================
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -42,7 +40,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 # =========================================
 # 🔥 JWT CUSTOM SERIALIZER
-# =========================================
 class CustomTokenSerializer( TokenObtainPairSerializer):
 
     @classmethod
@@ -58,15 +55,15 @@ class CustomTokenSerializer( TokenObtainPairSerializer):
 
         data = super().validate(attrs)
 
-        data["role"] = self.user.role
+        user = self.user
 
-        data["username"] = (
-            self.user.username
+        data["role"] = (
+            "admin" if user.is_superuser
+            else user.role
         )
 
-        data["email"] = (
-            self.user.email
-        )
+        data["username"] = user.username
+        data["email"] = user.email
 
         return data
 

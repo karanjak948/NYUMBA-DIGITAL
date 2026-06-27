@@ -15,6 +15,9 @@ import LandlordReports from "./pages/LandlordReports";
 import LandlordInquiries from "./pages/LandlordInquiries";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import NotificationsPage from "./pages/NotificationsPage";
+// import ProtectedRoute from "./components/ProtectedRoute";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminRoute from "./routes/AdminRoute";
 
 function App() {
   return (
@@ -30,6 +33,8 @@ function App() {
       <Route path="/landlord/inquiries" element={ <LandlordInquiries /> } />
       <Route path="/change-password" element={ <ChangePasswordPage /> } />
       <Route path="/notifications" element={<NotificationsPage />} />
+      <Route path="/admin/dashboard" element={ <AdminRoute> <AdminDashboard /> </AdminRoute> }/>
+      
       
 
       {/* Protected Routes */}
@@ -37,6 +42,7 @@ function App() {
       <Route path="/tenant/dashboard" element={ <ProtectedRoute> <TenantDashboard /> </ProtectedRoute> } />
       <Route  path="/add-property" element={ <ProtectedRoute>  <AddPropertyPage />  </ProtectedRoute> } />
       <Route  path="/edit-property/:id" element={ <ProtectedRoute>  <EditPropertyPage /> </ProtectedRoute> } />
+      <Route path="/admin/dashboard" element={ <ProtectedRoute allowedRoles={["admin"]}> <AdminDashboard /> </ProtectedRoute> } />
     </Routes>
   );
 }

@@ -115,7 +115,6 @@ export const getProperties = async () => {
          response.data;
 };
 
-
 // =========================================
 // GET SINGLE PROPERTY
 // =========================================
@@ -127,6 +126,14 @@ export const getProperty = async (id) => {
     );
 
   return response.data;
+};
+
+
+// GET USERS
+
+export const getUsers = async () => {
+  const res = await API.get("users/");
+  return res.data;
 };
 
 
@@ -387,3 +394,22 @@ export const markNotificationRead =
     return response.data;
 };
 
+export const getAdminDashboard = async () => {
+  const response = await API.get("auth/admin/dashboard/");
+  return response.data;
+};
+
+
+export const suspendUser = async (userId) => {
+  const response = await API.post(
+    `users/suspend-user/${userId}/`
+  );
+  return response.data;
+};
+
+export const adminApproveBooking = async (id) => {
+  const response = await API.post(
+    `bookings/admin-approve-booking/${id}/`
+  );
+  return response.data;
+};
